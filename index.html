@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evolución de la Programación — Documental Interactivo</title>
+  <meta name="description" content="Documental interactivo sobre la historia y evolución de los lenguajes de programación. Resúmenes claros de cada era." />
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #141b2d;
+      --card: #1a2338;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #2a3548;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    /* MAIN DOCUMENTARY */
+    #main-view { display: block; }
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 700;
+      background: linear-gradient(90deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    header p { color: var(--muted); max-width: 640px; margin: 0 auto; font-size: 1.05rem; }
+    .secret-trigger {
+      position: absolute;
+      bottom: 12px;
+      right: 18px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: default;
+      opacity: 0.15;
+      transition: opacity 0.3s;
+    }
+    .secret-trigger:hover { opacity: 0.45; border-color: var(--accent); }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    .intro {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+    .intro h2 { color: #93c5fd; margin-bottom: 0.75rem; font-size: 1.35rem; }
+    .timeline { position: relative; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      border-radius: 3px;
+    }
+    .era {
+      position: relative;
+      padding-left: 52px;
+      margin-bottom: 2.25rem;
+    }
+    .era::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 3px solid var(--accent);
+      z-index: 1;
+    }
+    .era.modern::before { border-color: var(--accent2); }
+    .era-year {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+    }
+    .era.modern .era-year { color: var(--accent2); }
+    .era h3 {
+      font-size: 1.35rem;
+      margin-bottom: 0.4rem;
+      color: #f1f5f9;
+    }
+    .era .lang-tag {
+      display: inline-block;
+      background: rgba(59,130,246,0.15);
+      color: #93c5fd;
+      font-size: 0.78rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 6px;
+      margin-right: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .era p { color: var(--muted); font-size: 0.98rem; }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
+
+    /* GAMES VAULT (hidden by default) */
+    #games-view {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #060a12;
+      z-index: 1000;
+      overflow-y: auto;
+      flex-direction: column;
+    }
+    #games-view.active { display: flex; }
+    .games-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: #0f1525;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .games-header h2 {
+      font-size: 1.25rem;
+      background: linear-gradient(90deg, #34d399, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .exit-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    .exit-btn:hover { background: #334155; }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .game-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+    .game-card .icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .game-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .game-card p { font-size: 0.8rem; color: var(--muted); }
+    .game-play {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      padding: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .game-play.active { display: flex; }
+    .game-play h3 { text-align: center; margin-bottom: 1rem; }
+    .back-to-grid {
+      align-self: flex-start;
+      margin-bottom: 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    canvas { display: block; margin: 0 auto; background: #0f172a; border-radius: 12px; border: 1px solid var(--border); max-width: 100%; }
+    .game-controls { text-align: center; margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+    .score-board { text-align: center; font-size: 1.1rem; margin-bottom: 0.75rem; color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <!-- ========== MAIN DOCUMENTARY VIEW ========== -->
+  <div id="main-view">
+    <header>
+      <h1>La Evolución de la Programación</h1>
+      <p>Un recorrido visual por los lenguajes que construyeron el software moderno. Desde las tarjetas perforadas hasta los lenguajes de sistemas actuales.</p>
+      <!-- Elemento oculto: click aquí para abrir el vault de juegos -->
+      <div class="secret-trigger" id="secretBtn" title=""></div>
+    </header>
+
+    <div class="container">
+      <section class="intro">
+        <h2>Por qué importa esta historia</h2>
+        <p>Cada lenguaje nació para resolver un problema concreto de su época: cálculo científico, gestión empresarial, sistemas operativos, web o concurrencia. Entender de dónde vienen te ayuda a elegir mejor cuál usar hoy.</p>
+      </section>
+
+      <div class="timeline">
+        <!-- 1950s -->
+        <article class="era">
+          <div class="era-year">1957</div>
+          <h3>Fortran</h3>
+          <span class="lang-tag">Científico</span>
+          <p>El primer lenguaje de alto nivel ampliamente adoptado. Creado por John Backus en IBM para cálculos numéricos. Permitía escribir fórmulas matemáticas casi como en papel en lugar de ensamblador. Todavía se usa en supercomputación y simulaciones.</p>
+        </article>
+
+        <article class="era">
+          <div class="era-year">1959–1960</div>
+          <h3>COBOL & LISP</h3>
+          <span class="lang-tag">Negocios</span>
+          <span class="lang-tag">IA</span>
+          <p><strong>COBOL</strong> (Grace Hopper y comité CODASYL) se diseñó para ser legible por gente de negocios. Dominó la banca y los sistemas legacy durante décadas. <strong>LISP</strong> (John McCarthy) introdujo la programación funcional y el procesamiento de listas; sigue siendo influyente en IA y lenguajes modernos.</p>
+        </article>
+
+        <article class="era">
+          <div class="era-year">1964</div>
+          <h3>BASIC</h3>
+          <span class="lang-tag">Educación</span>
+          <p>Beginner’s All-purpose Symbolic Instruction Code. Diseñado en Dartmouth para que cualquiera pudiera programar. Popularizó la informática personal en los 70 y 80 (Apple, Commodore, MSX…).</p>
+        </article>
+
+        <article class="era">
+          <div class="era-year">1972</div>
+          <h3>C</h3>
+          <span class="lang-tag">Sistemas</span>
+          <p>Dennis Ritchie en Bell Labs. Nació junto a Unix. Ofrece control de bajo nivel con una sintaxis relativamente limpia. Es el abuelo de casi todos los lenguajes de sistemas posteriores (C++, Java, C#, Go, Rust…).</p>
+        </article>
+
+        <article class="era">
+          <div class="era-year">1983–1985</div>
+          <h3>C++ y Objective-C</h3>
+          <span class="lang-tag">OOP</span>
+          <p>Bjarne Stroustrup añadió clases y orientación a objetos a C. Objective-C (usado en NeXT y luego en Apple) trajo mensajería dinámica. Ambos dominaron el desarrollo de aplicaciones de escritorio y sistemas durante años.</p>
+        </article>
+
+        <article class="era">
+          <div class="era-year">1991–1995</div>
+          <h3>Python, Java, JavaScript, PHP, Ruby</h3>
+          <span class="lang-tag">Web</span>
+          <span class="lang-tag">General</span>
+          <p>La década de los 90 explotó: <strong>Python</strong> (Guido van Rossum) por legibilidad; <strong>Java</strong> (Sun) con “escribe una vez, ejecuta en cualquier sitio”; <strong>JavaScript</strong> (Brendan Eich) en 10 días para el navegador; PHP y Ruby para el lado servidor. La web se volvió programable.</p>
+        </article>
+
+        <article class="era modern">
+          <div class="era-year">2009–hoy</div>
+          <h3>Go, Rust, TypeScript, Kotlin, Swift…</h3>
+          <span class="lang-tag">Modernos</span>
+          <p><strong>Go</strong> (Google) simplificó la concurrencia. <strong>Rust</strong> (Mozilla) promete seguridad de memoria sin garbage collector. TypeScript añade tipos a JavaScript. Kotlin y Swift modernizan Android e iOS. El foco ahora es seguridad, rendimiento y productividad del desarrollador.</p>
+        </article>
+      </div>
+    </div>
+
+    <footer>
+      <p>Hecho con ♥ para aprender historia de la programación · <a href="https://github.com/romanprogramador-stack/programacion-evolucion" target="_blank">Ver código en GitHub</a></p>
+    </footer>
+  </div>
+
+  <!-- ========== GAMES VAULT (no history entry) ========== -->
+  <div id="games-view">
+    <div class="games-header">
+      <h2>Arcade Oculto</h2>
+      <button class="exit-btn" id="exitGames">Salir → Documental</button>
+    </div>
+
+    <div class="games-grid" id="gamesGrid">
+      <div class="game-card" data-game="snake">
+        <div class="icon">🐍</div>
+        <h3>Snake</h3>
+        <p>Clásico de Nokia</p>
+      </div>
+      <div class="game-card" data-game="memory">
+        <div class="icon">🧠</div>
+        <h3>Memoria</h3>
+        <p>Encuentra las parejas</p>
+      </div>
+      <div class="game-card" data-game="clicker">
+        <div class="icon">⚡</div>
+        <h3>Click Rush</h3>
+        <p>Haz clic lo más rápido</p>
+      </div>
+      <div class="game-card" data-game="pong">
+        <div class="icon">🏓</div>
+        <h3>Pong Lite</h3>
+        <p>Vs. máquina</p>
+      </div>
+    </div>
+
+    <!-- Individual game areas -->
+    <div class="game-play" id="play-snake">
+      <button class="back-to-grid">← Volver al menú</button>
+      <h3>Snake</h3>
+      <div class="score-board">Puntos: <span id="snakeScore">0</span></div>
+      <canvas id="snakeCanvas" width="400" height="400"></canvas>
+      <div class="game-controls">Flechas o WASD para mover · Espacio para reiniciar</div>
+    </div>
+
+    <div class="game-play" id="play-memory">
+      <button class="back-to-grid">← Volver al menú</button>
+      <h3>Juego de Memoria</h3>
+      <div class="score-board">Movimientos: <span id="memoryMoves">0</span></div>
+      <div id="memoryBoard" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:360px;margin:0 auto;"></div>
+    </div>
+
+    <div class="game-play" id="play-clicker">
+      <button class="back-to-grid">← Volver al menú</button>
+      <h3>Click Rush</h3>
+      <div class="score-board">Clicks: <span id="clickCount">0</span> | Tiempo: <span id="clickTime">10</span>s</div>
+      <div style="text-align:center;margin-top:2rem;">
+        <button id="clickBtn" style="font-size:2rem;padding:1.5rem 3rem;border-radius:16px;border:none;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;cursor:pointer;">¡CLIC!</button>
+        <p style="margin-top:1rem;color:var(--muted);" id="clickMsg">Tienes 10 segundos. ¡Empieza cuando quieras!</p>
+      </div>
+    </div>
+
+    <div class="game-play" id="play-pong">
+      <button class="back-to-grid">← Volver al menú</button>
+      <h3>Pong Lite</h3>
+      <div class="score-board">Tú <span id="pongPlayer">0</span> – <span id="pongCpu">0</span> CPU</div>
+      <canvas id="pongCanvas" width="480" height="320"></canvas>
+      <div class="game-controls">Mueve con el ratón o flechas arriba/abajo</div>
+    </div>
+  </div>
+
+  <script>
+    // ========== SECRET ACCESS (no history push) ==========
+    const secretBtn = document.getElementById('secretBtn');
+    const mainView = document.getElementById('main-view');
+    const gamesView = document.getElementById('games-view');
+    const exitBtn = document.getElementById('exitGames');
+
+    function openGames() {
+      // No history.pushState / no hash → el historial solo ve la página principal
+      mainView.style.display = 'none';
+      gamesView.classList.add('active');
+      // Opcional: limpiar cualquier resto de URL
+      if (window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
+    function closeGames() {
+      gamesView.classList.remove('active');
+      mainView.style.display = 'block';
+      // Volver a mostrar el grid de juegos
+      document.querySelectorAll('.game-play').forEach(el => el.classList.remove('active'));
+      document.getElementById('gamesGrid').style.display = 'grid';
+      stopAllGames();
+    }
+
+    secretBtn.addEventListener('click', openGames);
+    exitBtn.addEventListener('click', closeGames);
+
+    // ========== GAME MENU ==========
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const game = card.dataset.game;
+        document.getElementById('gamesGrid').style.display = 'none';
+        document.querySelectorAll('.game-play').forEach(el => el.classList.remove('active'));
+        const playArea = document.getElementById('play-' + game);
+        if (playArea) {
+          playArea.classList.add('active');
+          startGame(game);
+        }
+      });
+    });
+
+    document.querySelectorAll('.back-to-grid').forEach(btn => {
+      btn.addEventListener('click', () => {
+        stopAllGames();
+        document.querySelectorAll('.game-play').forEach(el => el.classList.remove('active'));
+        document.getElementById('gamesGrid').style.display = 'grid';
+      });
+    });
+
+    // ========== GAME ENGINES ==========
+    let snakeInterval, pongInterval, clickTimer;
+    function stopAllGames() {
+      clearInterval(snakeInterval);
+      clearInterval(pongInterval);
+      clearInterval(clickTimer);
+    }
+
+    function startGame(name) {
+      stopAllGames();
+      if (name === 'snake') initSnake();
+      if (name === 'memory') initMemory();
+      if (name === 'clicker') initClicker();
+      if (name === 'pong') initPong();
+    }
+
+    // ---- SNAKE ----
+    function initSnake() {
+      const canvas = document.getElementById('snakeCanvas');
+      const ctx = canvas.getContext('2d');
+      const grid = 20;
+      let snake = [{x: 10, y: 10}];
+      let dir = {x: 1, y: 0};
+      let food = {x: 15, y: 15};
+      let score = 0;
+      let gameOver = false;
+
+      document.getElementById('snakeScore').textContent = '0';
+
+      function placeFood() {
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / grid)),
+          y: Math.floor(Math.random() * (canvas.height / grid))
+        };
+      }
+
+      function draw() {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // food
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(food.x * grid, food.y * grid, grid - 2, grid - 2);
+
+        // snake
+        ctx.fillStyle = '#22c55e';
+        snake.forEach((s, i) => {
+          ctx.fillStyle = i === 0 ? '#4ade80' : '#22c55e';
+          ctx.fillRect(s.x * grid, s.y * grid, grid - 2, grid - 2);
+        });
+
+        if (gameOver) {
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#f87171';
+          ctx.font = '28px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Game Over', canvas.width/2, canvas.height/2 - 10);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '16px sans-serif';
+          ctx.fillText('Espacio para reiniciar', canvas.width/2, canvas.height/2 + 20);
+        }
+      }
+
+      function update() {
+        if (gameOver) return;
+        const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+        // walls
+        if (head.x < 0 || head.x >= canvas.width/grid || head.y < 0 || head.y >= canvas.height/grid) {
+          gameOver = true; draw(); return;
+        }
+        // self
+        if (snake.some(s => s.x === head.x && s.y === head.y)) {
+          gameOver = true; draw(); return;
+        }
+
+        snake.unshift(head);
+        if (head.x === food.x && head.y === food.y) {
+          score += 10;
+          document.getElementById('snakeScore').textContent = score;
+          placeFood();
+        } else {
+          snake.pop();
+        }
+        draw();
+      }
+
+      function keyHandler(e) {
+        const k = e.key.toLowerCase();
+        if (k === 'arrowup' || k === 'w') { if (dir.y === 0) dir = {x:0,y:-1}; }
+        else if (k === 'arrowdown' || k === 's') { if (dir.y === 0) dir = {x:0,y:1}; }
+        else if (k === 'arrowleft' || k === 'a') { if (dir.x === 0) dir = {x:-1,y:0}; }
+        else if (k === 'arrowright' || k === 'd') { if (dir.x === 0) dir = {x:1,y:0}; }
+        else if (k === ' ' && gameOver) {
+          snake = [{x:10,y:10}]; dir = {x:1,y:0}; score = 0;
+          document.getElementById('snakeScore').textContent = '0';
+          gameOver = false; placeFood();
+        }
+      }
+
+      window.addEventListener('keydown', keyHandler);
+      // cleanup previous
+      clearInterval(snakeInterval);
+      snakeInterval = setInterval(update, 120);
+      draw();
+
+      // store cleanup
+      snakeInterval._cleanup = () => window.removeEventListener('keydown', keyHandler);
+    }
+
+    // ---- MEMORY ----
+    function initMemory() {
+      const board = document.getElementById('memoryBoard');
+      board.innerHTML = '';
+      const symbols = ['🐍','🐶','🐱','🐭','🐹','🐰','🐻','🦁'];
+      const cards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+      let flipped = [];
+      let matched = 0;
+      let moves = 0;
+      let lock = false;
+      document.getElementById('memoryMoves').textContent = '0';
+
+      cards.forEach((sym, i) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'aspect-ratio:1;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:pointer;border:2px solid #334155;transition:0.2s;';
+        div.dataset.sym = sym;
+        div.dataset.idx = i;
+        div.textContent = '?';
+        div.addEventListener('click', () => {
+          if (lock || div.classList.contains('matched') || flipped.includes(div)) return;
+          div.textContent = sym;
+          div.style.background = '#334155';
+          flipped.push(div);
+          if (flipped.length === 2) {
+            moves++;
+            document.getElementById('memoryMoves').textContent = moves;
+            lock = true;
+            if (flipped[0].dataset.sym === flipped[1].dataset.sym) {
+              flipped.forEach(c => { c.classList.add('matched'); c.style.borderColor = '#22c55e'; });
+              matched += 2;
+              flipped = [];
+              lock = false;
+              if (matched === cards.length) {
+                setTimeout(() => alert(' ¡Ganaste en ' + moves + ' movimientos!'), 200);
+              }
+            } else {
+              setTimeout(() => {
+                flipped.forEach(c => { c.textContent = '?'; c.style.background = '#1e293b'; });
+                flipped = [];
+                lock = false;
+              }, 700);
+            }
+          }
+        });
+        board.appendChild(div);
+      });
+    }
+
+    // ---- CLICKER ----
+    function initClicker() {
+      let count = 0;
+      let timeLeft = 10;
+      let running = false;
+      const countEl = document.getElementById('clickCount');
+      const timeEl = document.getElementById('clickTime');
+      const msg = document.getElementById('clickMsg');
+      const btn = document.getElementById('clickBtn');
+
+      countEl.textContent = '0';
+      timeEl.textContent = '10';
+      msg.textContent = 'Tienes 10 segundos. ¡Empieza cuando quieras!';
+      btn.disabled = false;
+
+      btn.onclick = () => {
+        if (!running) {
+          running = true;
+          clickTimer = setInterval(() => {
+            timeLeft--;
+            timeEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(clickTimer);
+              btn.disabled = true;
+              msg.textContent = ' ¡Fin! Hiciste ' + count + ' clicks.';
+            }
+          }, 1000);
+        }
+        if (timeLeft > 0) {
+          count++;
+          countEl.textContent = count;
+        }
+      };
+    }
+
+    // ---- PONG ----
+    function initPong() {
+      const canvas = document.getElementById('pongCanvas');
+      const ctx = canvas.getContext('2d');
+      let playerY = 120, cpuY = 120;
+      let ballX = 240, ballY = 160;
+      let ballVX = 4, ballVY = 3;
+      let pScore = 0, cScore = 0;
+      const paddleH = 70, paddleW = 10;
+
+      document.getElementById('pongPlayer').textContent = '0';
+      document.getElementById('pongCpu').textContent = '0';
+
+      function draw() {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // center line
+        ctx.strokeStyle = '#334155';
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // paddles
+        ctx.fillStyle = '#60a5fa';
+        ctx.fillRect(10, playerY, paddleW, paddleH);
+        ctx.fillStyle = '#f87171';
+        ctx.fillRect(canvas.width - 20, cpuY, paddleW, paddleH);
+
+        // ball
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath(); ctx.arc(ballX, ballY, 8, 0, Math.PI*2); ctx.fill();
+      }
+
+      function update() {
+        ballX += ballVX;
+        ballY += ballVY;
+
+        // walls
+        if (ballY < 8 || ballY > canvas.height - 8) ballVY *= -1;
+
+        // player paddle
+        if (ballX < 25 && ballY > playerY && ballY < playerY + paddleH) {
+          ballVX = Math.abs(ballVX) * 1.05;
+          ballVY += (ballY - (playerY + paddleH/2)) * 0.08;
+        }
+        // cpu paddle
+        if (ballX > canvas.width - 25 && ballY > cpuY && ballY < cpuY + paddleH) {
+          ballVX = -Math.abs(ballVX) * 1.05;
+          ballVY += (ballY - (cpuY + paddleH/2)) * 0.08;
+        }
+
+        // score
+        if (ballX < 0) {
+          cScore++; document.getElementById('pongCpu').textContent = cScore;
+          ballX = 240; ballY = 160; ballVX = 4; ballVY = 3;
+        }
+        if (ballX > canvas.width) {
+          pScore++; document.getElementById('pongPlayer').textContent = pScore;
+          ballX = 240; ballY = 160; ballVX = -4; ballVY = 3;
+        }
+
+        // simple AI
+        const target = ballY - paddleH/2;
+        cpuY += (target - cpuY) * 0.08;
+        cpuY = Math.max(0, Math.min(canvas.height - paddleH, cpuY));
+
+        draw();
+      }
+
+      function mouseMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        playerY = e.clientY - rect.top - paddleH/2;
+        playerY = Math.max(0, Math.min(canvas.height - paddleH, playerY));
+      }
+      function keyPong(e) {
+        if (e.key === 'ArrowUp') playerY = Math.max(0, playerY - 20);
+        if (e.key === 'ArrowDown') playerY = Math.min(canvas.height - paddleH, playerY + 20);
+      }
+
+      canvas.addEventListener('mousemove', mouseMove);
+      window.addEventListener('keydown', keyPong);
+      clearInterval(pongInterval);
+      pongInterval = setInterval(update, 1000/60);
+      draw();
+
+      pongInterval._cleanup = () => {
+        canvas.removeEventListener('mousemove', mouseMove);
+        window.removeEventListener('keydown', keyPong);
+      };
+    }
+
+    // Cleanup intervals on exit
+    const originalStop = stopAllGames;
+    stopAllGames = function() {
+      if (snakeInterval && snakeInterval._cleanup) snakeInterval._cleanup();
+      if (pongInterval && pongInterval._cleanup) pongInterval._cleanup();
+      originalStop();
+    };
+  </script>
+</body>
+</html>
